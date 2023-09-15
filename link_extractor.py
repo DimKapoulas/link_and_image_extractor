@@ -9,9 +9,10 @@ Functions:
 
 Note: Requires the urlopen, re and typing. modules. Raises URLError or URL exceptions
 """
-from urllib.request import urlopen, urljoin
+from urllib.request import urlopen
+from urllib.parse import urlparse, urljoin
 import re
-from typing import List
+from typing import List, Optional
 
 
 def download_page(url: str) -> str:
@@ -31,25 +32,116 @@ def download_page(url: str) -> str:
     return urlopen(url).read().decode("utf-8")
 
 
-def extract_links(page: str) -> List[str]:
-    """Extract and return a list of links from the provided HTML page content.  Args:
-        page (str): The HTML page content in string format.
+def extract_links(page: Optional[str]) -> Optional[List[str]]:
+    """
+    Extract and return a list of links from the provided HTML page content.
+
+    Args:
+        page Optional[str]: The HTML page content in string format, if any
 
     Returns:
-        List[str]: A list of URLs extracted from the HTML.
+        Optional[List[str]]: A list of URLs extracted from the HTML. May be empty
 
     Note:
         The function uses a regular expression to find links in the HTML content.
     """
+    if not page:
+        return []
     link_regex = re.compile("<a[^>]+href=[\"'](.*?)[\"']", re.IGNORECASE)
-    return link_regex.findall(page)
+    links = link_regex.findall(page)
+    links = [urljoin(page, link) for link in links]
+    return links
 
 
-if __name__ == "__main__":
-    URL = "http://www.apress.com"
-    apress = download_page(URL)
-    links = extract_links(apress)
+def get_links(page_url: str) -> Optional[List[str]]:
+    """
+    Extracts links from a web page identified by the given 'page_url'.
 
-    for link in links:
-        full_link = urljoin(URL, link)
-        print(full_link)
+    Args:
+        page_url (str): The URL of the web page from which links will be extracted.
+
+    Returns:
+        Optional[List[str]]: A list of links (URLs) found on the web page, filtered to include only
+        links with the same hostname as the input 'page_url'. If no links are found, an empty list
+        is returned. If there is an issue with downloading or parsing the page, None is returned.
+
+    Note:
+        - The function uses the 'urlparse' function to determine the hostname of the
+            'page_url'.
+        - It then downloads the web page using 'download_page' and extracts links
+            using 'extract_links'.
+        - Links with different hostnames are excluded from the final list.
+        - In case of errors or inability to download the page, the function returns None.
+    """
+    parsed_url = urlparse(page_url)
+    host = parsed_url.hostname
+    page = download_page(page_url)
+    links = extract_links(page)
+    if links:
+        return [link for link in links if urlparse(link).hostname == host]
+    return []
+
+
+def depth_first_seach(start_url: str):
+    """
+    Perform a Depth-First Search (DFS) on a collection of URLs starting from the given start_url.
+
+    Args:
+        start_url (str): The URL to start the DFS from.
+
+    Returns:
+        None
+
+    This function explores URLs in a depth-first manner, visiting each URL and its links before moving on to others.
+    It uses a stack (implemented as a deque) to manage which URLs to explore next and a visited set to keep track
+    of the URLs already explored. The exploration process continues until all reachable URLs have been visited.
+
+    Example:
+        depth_first_search("https://example.com")
+
+    """
+    from collections import deque
+    visited = set()
+    queue = dequeue
+
+    queue.append(start_url)    
+    while queue:
+        url = queue.popleft()
+        if url in visited:
+            continue
+        visited.add(url)
+        
+        for link in get_links(url):
+            queue.appendleft(link)
+        print(url)
+
+def breadth_first_search(start_url):
+    """
+    Perform a breadth-first search starting from the given 'start_url'.
+
+    Args:
+        start_url (str): The URL to start the search from.
+
+    Returns:
+        None
+
+    This function explores the graph by visiting nodes level by level, starting from the
+    'start_url'. It uses a queue data structure to maintain the order of exploration.
+    URLs are added to the queue and dequeued in a first-in, first-out (FIFO) manner.
+
+    The function prints each visited URL and keeps track of visited URLs to avoid revisiting them.
+    """
+    from collections import deque
+    visited = set()
+    queue = deque()
+    while queue:
+        url = queue.popleft()
+        if url in visited:
+            continue
+        visited.add(url)
+
+        queue.extend(get_links(url))
+        print(url)
+
+        
+
