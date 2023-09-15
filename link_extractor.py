@@ -9,7 +9,7 @@ Functions:
 
 Note: Requires the urlopen, re and typing. modules. Raises URLError or URL exceptions
 """
-from urllib.request import urlopen
+from urllib.request import urlopen, urljoin
 import re
 from typing import List
 
@@ -46,9 +46,10 @@ def extract_links(page: str) -> List[str]:
 
 
 if __name__ == "__main__":
-    TARGET_URL = "http://www.apress.com"
-    apress = download_page(TARGET_URL)
+    URL = "http://www.apress.com"
+    apress = download_page(URL)
     links = extract_links(apress)
 
     for link in links:
-        print(link)
+        full_link = urljoin(URL, link)
+        print(full_link)
