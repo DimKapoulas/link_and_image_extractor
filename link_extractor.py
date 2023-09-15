@@ -12,7 +12,25 @@ Note: Requires the urlopen, re and typing. modules. Raises URLError or URL excep
 from urllib.request import urlopen
 from urllib.parse import urlparse, urljoin
 import re
-from typing import List, Optional
+from typing import List, Optional, Deque
+
+
+def filter_none(iterable):
+    """
+    Helper function that filters out None values from an iterable and returns a new iterable with non-None elements.
+
+    Args:
+        iterable: An iterable (e.g., a list, tuple, or generator) containing elements to filter.
+
+    Returns:
+        Iterable: A new iterable containing only non-None elements from the input iterable.
+
+    Example:
+        >>> filter_none([1, 2, None, 3, None, 4])
+        [1, 2, 3, 4]
+
+    """
+    return (item for item in iterable if item is not None)
 
 
 def download_page(url: str) -> str:
@@ -78,7 +96,7 @@ def get_links(page_url: str) -> Optional[List[str]]:
     page = download_page(page_url)
     links = extract_links(page)
     if links:
-        return [link for link in links if urlparse(link).hostname == host]
+        return [link for link in links if urlparse(link).hostname == host] or None
     return []
 
 
@@ -101,19 +119,23 @@ def depth_first_seach(start_url: str):
 
     """
     from collections import deque
-    visited = set()
-    queue = dequeue
 
-    queue.append(start_url)    
+    visited = set()
+    queue: Deque = deque()
+
+    queue.append(start_url)
     while queue:
         url = queue.popleft()
         if url in visited:
             continue
         visited.add(url)
-        
-        for link in get_links(url):
+
+
+        links = filter_none(get_links(url)) 
+        for link in links:
             queue.appendleft(link)
         print(url)
+
 
 def breadth_first_search(start_url):
     """
@@ -132,6 +154,7 @@ def breadth_first_search(start_url):
     The function prints each visited URL and keeps track of visited URLs to avoid revisiting them.
     """
     from collections import deque
+
     visited = set()
     queue = deque()
     while queue:
@@ -143,5 +166,26 @@ def breadth_first_search(start_url):
         queue.extend(get_links(url))
         print(url)
 
-        
 
+def search(start_url: str, stategy: str = "DFS"):
+    from collections import deque
+
+    visited = set()
+    queue = deque()
+
+    if stategy == "DFS":
+        enqueue = queue.appendleft()
+    else:
+        enqueue = queue.extend()
+
+    enque(start_url)
+
+    while queue:
+        url = queue.pop()
+        if url in visited:
+            continue
+        visited.add(url)
+
+        for link in get_links(url):
+            enqueue(link)
+        print(link)
