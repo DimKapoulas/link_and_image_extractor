@@ -1,23 +1,31 @@
 """
 Web Page Download and Link Extraction Module
 
-Provides functions to download web page content from a URL and extract links.
+Provides functions to download web page content from a URL, extract links, and perform URL searches.
 
 Functions:
 - download_page(url: str) -> str: Download and return the page content as a UTF-8 encoded string.
 - extract_links(page: str) -> List[str]: Extract links from the HTML page content.
+- get_links(page_url: str) -> Optional[List[str]]: Extract links from a  page, filtered by hostname.
 
-Note: Requires the urlopen, re and typing. modules. Raises URLError or URL exceptions
+URL Search Functions:
+- url_search(start_url: str, strategy: str = "DFS"): Perform URL search using DFS or BFS strategy.
+
+Note: Requires the urlopen, re, and typing modules. Raises URLError or URL exceptions.
 """
 from urllib.request import urlopen
 from urllib.parse import urlparse, urljoin
 import re
 from typing import List, Optional, Deque
+from collections import deque
+
+
 
 
 def filter_none(iterable):
     """
-    Helper function that filters out None values from an iterable and returns a new iterable with non-None elements.
+    Helper function that filters out None values from an iterable and returns a new iterable with
+    non-None elements.
 
     Args:
         iterable: An iterable (e.g., a list, tuple, or generator) containing elements to filter.
@@ -100,85 +108,37 @@ def get_links(page_url: str) -> Optional[List[str]]:
     return []
 
 
-def depth_first_seach(start_url: str):
+def url_search(start_url: str, stategy: str = "DFS"):
     """
-    Perform a Depth-First Search (DFS) on a collection of URLs starting from the given start_url.
-
-    Args:
-        start_url (str): The URL to start the DFS from.
-
-    Returns:
-        None
-
-    This function explores URLs in a depth-first manner, visiting each URL and its links before moving on to others.
-    It uses a stack (implemented as a deque) to manage which URLs to explore next and a visited set to keep track
-    of the URLs already explored. The exploration process continues until all reachable URLs have been visited.
-
-    Example:
-        depth_first_search("https://example.com")
-
-    """
-    from collections import deque
-
-    visited = set()
-    queue: Deque = deque()
-
-    queue.append(start_url)
-    while queue:
-        url = queue.popleft()
-        if url in visited:
-            continue
-        visited.add(url)
-
-
-        links = filter_none(get_links(url)) 
-        for link in links:
-            queue.appendleft(link)
-        print(url)
-
-
-def breadth_first_search(start_url):
-    """
-    Perform a breadth-first search starting from the given 'start_url'.
+    Perform URL search using Depth-First Search (DFS) or Breadth-First Search (BFS) strategy.
 
     Args:
         start_url (str): The URL to start the search from.
+        stategy (str, optional): The search strategy to use, either "DFS" (default) or "BFS".
 
     Returns:
         None
 
-    This function explores the graph by visiting nodes level by level, starting from the
-    'start_url'. It uses a queue data structure to maintain the order of exploration.
-    URLs are added to the queue and dequeued in a first-in, first-out (FIFO) manner.
+    This function explores URLs using either Depth-First Search (DFS) or Breadth-First Search (BFS)
+    strategy. It starts from the given start_url and visits links in the chosen strategy order.
+    The function uses a queue (implemented as a deque) to manage which URLs to explore next
+    and a visited set to keep track of the URLs already explored.
+    The exploration process continues until all reachable URLs have been visited.
 
-    The function prints each visited URL and keeps track of visited URLs to avoid revisiting them.
+    Example:
+        >>> url_search("https://example.com", "DFS")
+        # Start a DFS search from "https://example.com"
+
     """
-    from collections import deque
-
     visited = set()
-    queue = deque()
-    while queue:
-        url = queue.popleft()
-        if url in visited:
-            continue
-        visited.add(url)
-
-        queue.extend(get_links(url))
-        print(url)
-
-
-def search(start_url: str, stategy: str = "DFS"):
-    from collections import deque
-
-    visited = set()
-    queue = deque()
+    queue: Deque = deque()
 
     if stategy == "DFS":
-        enqueue = queue.appendleft()
+        enqueue = queue.appendleft
     else:
-        enqueue = queue.extend()
+        enqueue = queue.append
 
-    enque(start_url)
+    enqueue(start_url)
 
     while queue:
         url = queue.pop()
@@ -186,6 +146,13 @@ def search(start_url: str, stategy: str = "DFS"):
             continue
         visited.add(url)
 
-        for link in get_links(url):
+        links = filter_none(get_links(url))
+        for link in links:
             enqueue(link)
-        print(link)
+            print(link)
+
+
+if __name__ == "__main__":
+    URL = "https://www.sainsburys.co.uk/shop/gb/groceries/meat-fish/"
+    url_search(URL, 'BFS')
+    # url_search(URL)
